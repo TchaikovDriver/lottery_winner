@@ -1,8 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+part 'user_settings_ui.dart';
+
 
 class SharedPreference {
   static SharedPreferences _sp;
-  static String lotteryPickCountKey = 'PickCnt';
+  static const String lotteryPickCountKey = 'PickCnt';
+  static const String fixedLotteryNumberKey = "FixedLot";
 
   static void init() async {
     if (_sp != null) return;
@@ -17,5 +21,14 @@ class SharedPreference {
   static void setLotteryPickCount(int count) {
     if (count <= 0) throw 'Count must be positive!';
     _sp.setInt(lotteryPickCountKey, count);
+  }
+
+  static String getFixedLotteryNumber({String defaultVal: "01-08-13-19-24-29 / 05"}) {
+    var ret = _sp.get(fixedLotteryNumberKey);
+    return ret == null ? defaultVal : ret;
+  }
+
+  static void setFixedLotteryNumber(String value) {
+    _sp.setString(fixedLotteryNumberKey, value);
   }
 }

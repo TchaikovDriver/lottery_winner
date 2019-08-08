@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'user_settings.dart';
 import 'lottery_data_manager.dart';
+import 'lottery_history.dart';
 
 void initialize() async => SharedPreference.init();
 
@@ -43,16 +44,18 @@ class PickerPage extends StatefulWidget {
 
 class _PickerPageState extends State<PickerPage> {
   bool _loading = false;
-  final LotteryDataManager _lotteryDataManager = const LotteryDataManager();
+  final LotteryDataManager _lotteryDataManager = LotteryDataManager();
   List<String> _lotteryNumbers = [];
-  final TextStyle _style = const TextStyle(fontSize: 16.0, color: Colors.black87);
+  static const TextStyle _style =
+      TextStyle(fontSize: 16.0, color: Colors.black87);
 
   void _pickLotteryNumbers() {
     setState(() {
       _loading = true;
     });
-    _lotteryDataManager.pickLotteryNumbersRandomly(SharedPreference.getLotteryPickCount())
-    .then((list) {
+    _lotteryDataManager
+        .pickLotteryNumbersRandomly(SharedPreference.getLotteryPickCount())
+        .then((list) {
       setState(() {
         _lotteryNumbers = list;
         _loading = false;
@@ -64,7 +67,8 @@ class _PickerPageState extends State<PickerPage> {
     if (_loading) {
       return Center(child: Container(child: CircularProgressIndicator()));
     } else {
-      return ListView.builder(
+      return ListView.separated(
+          separatorBuilder: (context, i) => Divider(color: Colors.black87),
           padding: const EdgeInsets.all(16.0),
           itemCount: _lotteryNumbers.length,
           itemBuilder: (context, i) {
@@ -77,6 +81,27 @@ class _PickerPageState extends State<PickerPage> {
 
   Widget _buildRow(String lotteryNumber) {
     return ListTile(title: Text(lotteryNumber, style: _style));
+  }
+
+  List<Widget> _buildActions() {
+    return [
+      IconButton(
+          icon: Icon(Icons.history),
+          onPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+              return LotteryHistory();
+            }));
+          }),
+      IconButton(
+          icon: Icon(Icons.settings),
+          onPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+              return UserSettingPage();
+            }));
+          })
+    ];
   }
 
   @override
@@ -92,6 +117,7 @@ class _PickerPageState extends State<PickerPage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: _buildActions(),
       ),
       body: listOrLoading(),
       floatingActionButton: FloatingActionButton(
