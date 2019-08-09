@@ -63,17 +63,32 @@ class _PickerPageState extends State<PickerPage> {
     });
   }
 
+  void savePickedLotteryNumber(List<String> lotteryNumbers) {
+    _lotteryDataManager.cachePickedLotteryNumber(lotteryNumbers);
+  }
+
   Widget listOrLoading() {
     if (_loading) {
       return Center(child: Container(child: CircularProgressIndicator()));
     } else {
-      return ListView.separated(
-          separatorBuilder: (context, i) => Divider(color: Colors.black87),
-          padding: const EdgeInsets.all(16.0),
-          itemCount: _lotteryNumbers.length,
-          itemBuilder: (context, i) {
-            return _buildRow(_lotteryNumbers[i]);
-          });
+      return Stack(children: [
+        ListView.separated(
+            separatorBuilder: (context, i) => Divider(color: Colors.black87),
+            padding: const EdgeInsets.all(16.0),
+            itemCount: _lotteryNumbers.length,
+            itemBuilder: (context, i) {
+              return _buildRow(_lotteryNumbers[i]);
+            }),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: SafeArea(
+              child: RaisedButton(
+                  child: Text('Pick this!'),
+                  onPressed: () {
+                    savePickedLotteryNumber(_lotteryNumbers);
+                  })),
+        )
+      ]);
     }
   }
 
