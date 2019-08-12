@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'user_settings.dart';
 import 'lottery_data_manager.dart';
 import 'lottery_history.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui';
+import 'image_saver.dart';
 
 void initialize() async => SharedPreference.init();
 
@@ -43,6 +46,7 @@ class PickerPage extends StatefulWidget {
 }
 
 class _PickerPageState extends State<PickerPage> {
+  GlobalKey _repaintBoundaryKey = GlobalKey();
   bool _loading = false;
   final LotteryDataManager _lotteryDataManager = LotteryDataManager();
   List<String> _lotteryNumbers = [];
@@ -67,26 +71,39 @@ class _PickerPageState extends State<PickerPage> {
     _lotteryDataManager.cachePickedLotteryNumber(lotteryNumbers);
   }
 
-  Widget listOrLoading() {
+  Future<void> savePickedLotteryNumberToGallery() async {
+    RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext.findRenderObject();
+    var image = await boundary.toImage(pixelRatio: 1.0);
+    var bytes = await image.toByteData(format: ImageByteFormat.png);
+    await saveImageToGallery(bytes);
+  }
+
+  Widget listOrLoading(Function showSnackBar) {
     if (_loading) {
       return Center(child: Container(child: CircularProgressIndicator()));
     } else {
       return Stack(children: [
-        ListView.separated(
-            separatorBuilder: (context, i) => Divider(color: Colors.black87),
-            padding: const EdgeInsets.all(16.0),
-            itemCount: _lotteryNumbers.length,
-            itemBuilder: (context, i) {
-              return _buildRow(_lotteryNumbers[i]);
-            }),
+        RepaintBoundary(
+          key: _repaintBoundaryKey,
+            child: ListView.separated(
+                separatorBuilder: (context, i) =>
+                    Divider(color: Colors.black87),
+                padding: const EdgeInsets.all(16.0),
+                itemCount: _lotteryNumbers.length,
+                itemBuilder: (context, i) {
+                  return _buildRow(_lotteryNumbers[i]);
+                })),
         Align(
           alignment: Alignment.bottomCenter,
           child: SafeArea(
-              child: RaisedButton(
-                  child: Text('Pick this!'),
-                  onPressed: () {
-                    savePickedLotteryNumber(_lotteryNumbers);
-                  })),
+              child: Padding(
+                  padding: EdgeInsets.only(bottom: 20.0),
+                  child: RaisedButton(
+                      child: Text('Pick this!'),
+                      onPressed: () {
+                        savePickedLotteryNumber(_lotteryNumbers);
+                        savePickedLotteryNumberToGallery().then(showSnackBar('Saved.'));
+                      }))),
         )
       ]);
     }
@@ -134,7 +151,13 @@ class _PickerPageState extends State<PickerPage> {
         title: Text(widget.title),
         actions: _buildActions(),
       ),
-      body: listOrLoading(),
+      body: Builder(
+          builder: (context) => listOrLoading((text) {
+                Scaffold.of(context).showSnackBar(SnackBar(
+                    content: Text(text,
+                        style: const TextStyle(
+                            fontSize: 16.0, color: Colors.white))));
+              })),
       floatingActionButton: FloatingActionButton(
         onPressed: _pickLotteryNumbers,
         tooltip: 'Pick lottery numbers',
@@ -143,3 +166,5 @@ class _PickerPageState extends State<PickerPage> {
     );
   }
 }
+
+void _showSnackBar(BuildContext context, String text) {}

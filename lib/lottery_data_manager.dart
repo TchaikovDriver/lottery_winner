@@ -139,6 +139,8 @@ class LotteryDataManager {
     }
   }
 
+  /// 请求random.org获取[count]个LotteryNumbers，并将数据以
+  /// xx  xx  xx  xx  xx  xx - xx的list形式返回
   Future<List<String>> pickLotteryNumbersRandomly(int count) async {
     var data = await requestRandomLotteryNumbers(count);
     if (data.length == 0) return data;

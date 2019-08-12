@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'lottery_data_manager.dart';
+import 'win_result.dart';
 
 class LotteryHistory extends StatefulWidget {
   @override
@@ -11,7 +12,7 @@ class LotteryHistory extends StatefulWidget {
 class _LotteryHistoryState extends State<LotteryHistory> {
   bool _isLoading = true;
   List<String> _lotteryHistory = [];
-  LotteryDataManager dataManager = LotteryDataManager();
+  LotteryDataManager _dataManager = LotteryDataManager();
   static const TextStyle _style = TextStyle(fontSize: 18.0);
 
   Widget _body(BuildContext context) {
@@ -41,7 +42,7 @@ class _LotteryHistoryState extends State<LotteryHistory> {
   }
 
   void readLocalHistory() async {
-    var list = await dataManager.lotteryHistoryList;
+    var list = await _dataManager.lotteryHistoryList;
     setState(() {
       _isLoading = false;
       _lotteryHistory = list;
@@ -58,12 +59,12 @@ class _LotteryHistoryState extends State<LotteryHistory> {
       _isLoading = true;
     });
     var order = int.parse(getOrderFromHistory(_lotteryHistory[0]));
-    var newHistory = await dataManager.requestNewLotteryHistoryLargerThanOrder(order);
+    var newHistory = await _dataManager.requestNewLotteryHistoryLargerThanOrder(order);
     setState(() {
       _lotteryHistory.insertAll(0, newHistory);
       _isLoading = false;
     });
-    dataManager.insertLotteryNumberInHistoryFile(newHistory);
+    _dataManager.insertLotteryNumberInHistoryFile(newHistory);
   }
 
   @override
@@ -72,7 +73,8 @@ class _LotteryHistoryState extends State<LotteryHistory> {
     return Scaffold(
       appBar: AppBar(title: Text('Lottery History'), actions: <Widget>[
         IconButton(icon: Icon(Icons.attach_money), onPressed: () {
-          
+          var pickedLotteryNumbers = _dataManager.getPickedLotteryNumber();
+          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context)=>WinResult(pickedLotteryNumbers, _lotteryHistory)));
         },)
       ],),
       body: _body(context),
