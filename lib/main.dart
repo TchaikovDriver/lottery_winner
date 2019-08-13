@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'user_settings.dart';
 import 'lottery_data_manager.dart';
 import 'lottery_history.dart';
@@ -46,14 +47,20 @@ class PickerPage extends StatefulWidget {
 }
 
 class _PickerPageState extends State<PickerPage> {
+  static const sendGalleryBroadcastMethodName = 'sendGalleryBroadcast';
   GlobalKey _repaintBoundaryKey = GlobalKey();
   bool _loading = false;
+  bool _lock = false;
   final LotteryDataManager _lotteryDataManager = LotteryDataManager();
   List<String> _lotteryNumbers = [];
+  MethodChannel _methodChannel =
+      MethodChannel('com.frost.lotterywinner/gallerybroadcast');
+
   static const TextStyle _style =
       TextStyle(fontSize: 16.0, color: Colors.black87);
 
   void _pickLotteryNumbers() {
+    if (_lock) return;
     setState(() {
       _loading = true;
     });
@@ -71,11 +78,20 @@ class _PickerPageState extends State<PickerPage> {
     _lotteryDataManager.cachePickedLotteryNumber(lotteryNumbers);
   }
 
-  Future<void> savePickedLotteryNumberToGallery() async {
-    RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext.findRenderObject();
-    var image = await boundary.toImage(pixelRatio: 1.0);
-    var bytes = await image.toByteData(format: ImageByteFormat.png);
-    await saveImageToGallery(bytes);
+  Future<bool> savePickedLotteryNumberToGallery() async {
+    RenderRepaintBoundary boundary =
+        _repaintBoundaryKey.currentContext.findRenderObject();
+    var image = await boundary.toImage();
+    var imgPath = await saveImageToGallery(image);
+    print(imgPath);
+    var ret = await _methodChannel
+        .invokeMethod(sendGalleryBroadcastMethodName, {'imgPath': imgPath});
+    if (ret) {
+      print('Send broadcast success.');
+    } else {
+      print('Send broadcast failed');
+    }
+    return ret;
   }
 
   Widget listOrLoading(Function showSnackBar) {
@@ -84,7 +100,7 @@ class _PickerPageState extends State<PickerPage> {
     } else {
       return Stack(children: [
         RepaintBoundary(
-          key: _repaintBoundaryKey,
+            key: _repaintBoundaryKey,
             child: ListView.separated(
                 separatorBuilder: (context, i) =>
                     Divider(color: Colors.black87),
@@ -98,12 +114,35 @@ class _PickerPageState extends State<PickerPage> {
           child: SafeArea(
               child: Padding(
                   padding: EdgeInsets.only(bottom: 20.0),
-                  child: RaisedButton(
-                      child: Text('Pick this!'),
-                      onPressed: () {
-                        savePickedLotteryNumber(_lotteryNumbers);
-                        savePickedLotteryNumberToGallery().then(showSnackBar('Saved.'));
-                      }))),
+                  child: Row(children: [
+                    Padding(
+                      padding: EdgeInsets.only(right: 20.0, left: 25.0),
+                      child: RaisedButton(
+                        onPressed: () {
+                          setState(() {
+                            _lock = !_lock;
+                          });
+                        },
+                        child: Text(
+                          _lock ? 'Unlock' : 'Lock',
+                          style: _style,
+                        ),
+                      ),
+                    ),
+                    RaisedButton(
+                        child: Text('Pick this!'),
+                        onPressed: () {
+                          if (_lock) {
+                            showSnackBar('Unlock first.');
+                            return;
+                          }
+                          savePickedLotteryNumber(_lotteryNumbers);
+                          showSnackBar('Saved.');
+//                        savePickedLotterfluyNumberToGallery().then((bool success) {
+//                          showSnackBar(success ? 'Saved.' : 'Something wrong.');
+//                        });
+                        })
+                  ]))),
         )
       ]);
     }
@@ -120,6 +159,7 @@ class _PickerPageState extends State<PickerPage> {
       IconButton(
           icon: Icon(Icons.history),
           onPressed: () {
+            if (_lock) return;
             Navigator.of(context)
                 .push(MaterialPageRoute<void>(builder: (BuildContext context) {
               return LotteryHistory();
@@ -128,6 +168,7 @@ class _PickerPageState extends State<PickerPage> {
       IconButton(
           icon: Icon(Icons.settings),
           onPressed: () {
+            if (_lock) return;
             Navigator.of(context)
                 .push(MaterialPageRoute<void>(builder: (BuildContext context) {
               return UserSettingPage();
