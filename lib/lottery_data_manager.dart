@@ -23,7 +23,8 @@ class LotteryDataManager {
   /// 加载后会在cache目录下创建文件写一遍。将整个文件内容读取成String并返回。
   Future<String> _loadLotteryHistoryFileContent() async {
     var cacheFile = await _createFileByPath(
-        await getTemporaryDirectory(), historyLotteryFileName, deleteIfExits: false);
+        await getTemporaryDirectory(), historyLotteryFileName,
+        deleteIfExits: false);
     var history;
     if (await cacheFile.exists()) {
       print(cacheFile.path);
@@ -103,12 +104,15 @@ class LotteryDataManager {
   Future<void> insertLotteryNumberInHistoryFile(
       List<String> newLotteryHistory) async {
     var file = await _createFileByPath(
-        await getTemporaryDirectory(), historyLotteryFileName, deleteIfExits: false);
+        await getTemporaryDirectory(), historyLotteryFileName,
+        deleteIfExits: false);
     var sink = file.openWrite(mode: FileMode.append);
     for (var i = newLotteryHistory.length - 1; i >= 0; --i) {
       sink.writeln(newLotteryHistory[i]);
     }
-    sink..flush()..close();
+    sink
+      ..flush()
+      ..close();
   }
 
   Future<Set<String>> _getLotteryHistory() async {
@@ -164,6 +168,17 @@ class LotteryDataManager {
     return ret.sublist(0, 5 > ret.length ? ret.length : 5);
   }
 
+  List<String> getFixedLotteryNumbers() {
+    var ret = <String>[
+      "01  08  13  19  24  29  -  05",
+      "05  09  10  12  14  25  -  09",
+      "01  03  08  10  19  24  -  13",
+      "04  08  18  20  21  25  -  10",
+      "09  10  12  20  26  33  -  08"
+    ];
+    return ret;
+  }
+
   void cachePickedLotteryNumber(List<String> lotteryNumbers) {
     var sb = StringBuffer();
     for (var i = 0, len = lotteryNumbers.length; i < len; ++i) {
@@ -181,7 +196,8 @@ class LotteryDataManager {
     return cache.split('|');
   }
 
-  Future<File> _createFileByPath(Directory dir, String fileName, {bool deleteIfExits=true}) async {
+  Future<File> _createFileByPath(Directory dir, String fileName,
+      {bool deleteIfExits = true}) async {
     var file = File('${dir.path}/$fileName');
     if (deleteIfExits && await file.exists()) await file.delete();
     return file;

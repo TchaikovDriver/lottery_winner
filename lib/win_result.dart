@@ -19,11 +19,16 @@ class WinResult extends StatefulWidget {
 class _WinResultState extends State<WinResult> {
   static const TextStyle _plainTextStyle = TextStyle(fontSize: 18.0);
   static const TextStyle _notHitTextStyle =
-      TextStyle(fontSize: 18.0, color: Colors.black);
+      const TextStyle(fontSize: 18.0, color: Colors.black);
   static const TextStyle _hitRedTextStyle =
-      TextStyle(fontSize: 18.0, color: Colors.orange);
+      const TextStyle(fontSize: 18.0, color: Colors.orange);
   static const TextStyle _hitBlueTextStyle =
-      TextStyle(fontSize: 18.0, color: Colors.amberAccent);
+      const TextStyle(fontSize: 18.0, color: Colors.amberAccent);
+  static const TextStyle _prizeTextStyle = const TextStyle(
+      fontSize: 18.0,
+      backgroundColor: Colors.orangeAccent,
+      color: Colors.white);
+
   bool _showWinResult = false;
 
   // xx  xx  xx  xx  xx  xx - xx
@@ -62,6 +67,12 @@ class _WinResultState extends State<WinResult> {
 
   List<Widget> constructPickedWidgets(BuildContext context) {
     var pickedWidgets = <Widget>[];
+    if (this.historyLotteryNumbers.isNotEmpty &&
+        _orderController.text.isEmpty) {
+      var firstHistory = this.historyLotteryNumbers[0];
+      var order = firstHistory.split(" ")[0];
+      _orderController.text = order;
+    }
     if (_showWinResult) {
       var targetOrder = int.tryParse(_orderController.text);
       var targetHistory = _findHistoryByOrder(targetOrder);
@@ -91,11 +102,7 @@ class _WinResultState extends State<WinResult> {
                 ? _hitBlueTextStyle
                 : _notHitTextStyle));
         balls.add(TextSpan(
-            text: ' ${lotteryResult.prize} \n',
-            style: const TextStyle(
-                fontSize: 18.0,
-                backgroundColor: Colors.orangeAccent,
-                color: Colors.white)));
+            text: ' ${lotteryResult.prize} \n', style: _prizeTextStyle));
         pickedWidgets.add(RichText(text: TextSpan(children: balls)));
       }
     } else {
@@ -144,11 +151,56 @@ class _WinResultState extends State<WinResult> {
                                 });
                               },
                               child: Text('Check!'),
-                            ))
+                            )),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            children: _buildAwardColumns(),
+                          ),
+                        )
                       ],
                     ))))
       ],
     );
+  }
+
+  List<Widget> _buildAwardColumns() {
+    var ret = <Widget>[];
+    var spans = _buildAwardList();
+    var i = 0;
+    while (i < spans.length) {
+      ret.add(SizedBox(
+          width: 250.0,
+          height: 50.0,
+          child: Stack(children: <Widget>[
+            Positioned(left: 0, child: RichText(text: spans[i])),
+            Positioned(right: 0, child: RichText(text: spans[i + 1]))
+          ])));
+      i += 2;
+    }
+    return ret;
+  }
+
+  List<InlineSpan> _buildAwardList() {
+    var awardList = <String>[
+      "MAXIMUM: ￥5,000,000　",
+      "MAXIMUM: ￥1,500,000　",
+      "ACTUALLY: ￥3000　",
+      "ACTUALLY: ￥200　",
+      "ACTUALLY: ￥10　",
+      "ACTUALLY: ￥5　",
+    ];
+    int i = 1;
+    var ret = <InlineSpan>[];
+    for (String line in awardList) {
+      var cols = line.split(" ");
+      ret.add(TextSpan(text: cols[0], style: _notHitTextStyle));
+      ret.add(TextSpan(text: cols[1], style: _notHitTextStyle, children: [
+        TextSpan(text: " " + i.toString() + " ", style: _prizeTextStyle)
+      ]));
+      ++i;
+    }
+    return ret;
   }
 
   @override

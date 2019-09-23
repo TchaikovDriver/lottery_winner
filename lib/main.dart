@@ -64,14 +64,22 @@ class _PickerPageState extends State<PickerPage> {
     setState(() {
       _loading = true;
     });
-    _lotteryDataManager
-        .pickLotteryNumbersRandomly(SharedPreference.getLotteryPickCount())
-        .then((list) {
+    if (SharedPreference.getUseFixedMode()) {
+      var numbers = _lotteryDataManager.getFixedLotteryNumbers();
       setState(() {
-        _lotteryNumbers = list;
+        _lotteryNumbers = numbers;
         _loading = false;
       });
-    });
+    } else {
+      _lotteryDataManager
+          .pickLotteryNumbersRandomly(SharedPreference.getLotteryPickCount())
+          .then((list) {
+        setState(() {
+          _lotteryNumbers = list;
+          _loading = false;
+        });
+      });
+    }
   }
 
   void savePickedLotteryNumber(List<String> lotteryNumbers) {

@@ -59,9 +59,20 @@ class _LotteryHistoryState extends State<LotteryHistory> {
       _isLoading = true;
     });
     var order = int.parse(getOrderFromHistory(_lotteryHistory[0]));
-    var newHistory = await _dataManager.requestNewLotteryHistoryLargerThanOrder(order);
+    var newHistory =
+        await _dataManager.requestNewLotteryHistoryLargerThanOrder(order);
+    var formattedNewHistory = newHistory.map((row) {
+      var sb = StringBuffer();
+      var numbers = row.split(",");
+      var len = numbers.length - 1;
+      for (var i = 0; i < len; ++i) {
+        sb..write(numbers[i])..write("  ");
+      }
+      sb.write(numbers[len]);
+      return sb.toString();
+    }).toList(growable: false);
     setState(() {
-      _lotteryHistory.insertAll(0, newHistory);
+      _lotteryHistory.insertAll(0, formattedNewHistory);
       _isLoading = false;
     });
     _dataManager.insertLotteryNumberInHistoryFile(newHistory);
@@ -71,12 +82,20 @@ class _LotteryHistoryState extends State<LotteryHistory> {
   Widget build(BuildContext context) {
     readLocalHistory();
     return Scaffold(
-      appBar: AppBar(title: Text('Lottery History'), actions: <Widget>[
-        IconButton(icon: Icon(Icons.attach_money), onPressed: () {
-          var pickedLotteryNumbers = _dataManager.getPickedLotteryNumber();
-          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context)=>WinResult(pickedLotteryNumbers, _lotteryHistory)));
-        },)
-      ],),
+      appBar: AppBar(
+        title: Text('Lottery History'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.attach_money),
+            onPressed: () {
+              var pickedLotteryNumbers = _dataManager.getPickedLotteryNumber();
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) =>
+                      WinResult(pickedLotteryNumbers, _lotteryHistory)));
+            },
+          )
+        ],
+      ),
       body: _body(context),
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.update),

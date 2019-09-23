@@ -1,12 +1,20 @@
 part of 'user_settings.dart';
 
-class UserSettingPage extends StatelessWidget {
+class UserSettingPage extends StatefulWidget {
+  @override
+  State createState() {
+    return _UserSettingState();
+  }
+}
+
+class _UserSettingState extends State<UserSettingPage> {
   final TextEditingController _fixedLotteryNumberController =
       TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    _fixedLotteryNumberController.text = SharedPreference.getFixedLotteryNumber();
+    _fixedLotteryNumberController.text =
+        SharedPreference.getFixedLotteryNumber();
     return Scaffold(
         appBar: AppBar(
           title: Text('User Settings'),
@@ -31,6 +39,16 @@ class UserSettingPage extends StatelessWidget {
                         helperText: 'xx xx xx xx xx xx - xx'),
                     autofocus: false,
                   )),
+              Padding(
+                padding: EdgeInsets.only(top: 20.0, left: 18.0, right: 18.0),
+                child: CheckboxListTile(
+                    title: Text("Use Fixed Mode"),
+                    value: SharedPreference.getUseFixedMode(),
+                    onChanged: (bool check) {
+                      SharedPreference.setUseFixedMode(check);
+                      setState(() {});
+                    }),
+              ),
               Expanded(
                   child: SafeArea(
                       child: Align(
