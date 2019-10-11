@@ -30,6 +30,7 @@ class _WinResultState extends State<WinResult> {
       color: Colors.white);
 
   bool _showWinResult = false;
+  String _currentOrderLottery = "";
 
   // xx  xx  xx  xx  xx  xx - xx
   List<String> pickedLotteryNumbers;
@@ -81,6 +82,8 @@ class _WinResultState extends State<WinResult> {
         Fluttertoast.showToast(msg: '找不到指定期数，请输入合法期数或更新历史数据');
         return constructPickedWidgets(context);
       }
+      _currentOrderLottery =
+          targetHistory.substring(targetHistory.indexOf(" "));
       for (String picked in pickedLotteryNumbers) {
         var balls = <TextSpan>[];
         var principle = _WinPrinciple(targetHistory);
@@ -138,6 +141,11 @@ class _WinResultState extends State<WinResult> {
                           keyboardType: TextInputType.number,
                         ),
                         Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Text(_currentOrderLottery,
+                              style: _plainTextStyle),
+                        ),
+                        Padding(
                             padding: const EdgeInsets.all(15.0),
                             child: RaisedButton(
                               onPressed: () {
@@ -153,15 +161,86 @@ class _WinResultState extends State<WinResult> {
                               child: Text('Check!'),
                             )),
                         Padding(
-                          padding: const EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0, bottom: 0.0),
                           child: Column(
                             children: _buildAwardColumns(),
                           ),
+                        ),
+                        RaisedButton(
+                          child: Text(
+                            "Rule",
+                          ),
+                          onPressed: () {
+                            showRule(context);
+                          },
                         )
                       ],
                     ))))
       ],
     );
+  }
+
+  void showRule(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return SimpleDialog(
+            title: Text("Rule"),
+            children: _buildRuleDialogOptions(),
+          );
+        });
+  }
+
+  List<Widget> _buildRuleDialogOptions() {
+    const plainTextStyle = TextStyle(color: Colors.black, fontSize: 16.0);
+    var rule = [
+      // 第0位：奖项，第1位：红球数，第2位：蓝球数
+      [1, 6, 1],
+      [2, 6, 0],
+      [3, 5, 1],
+      [4, 5, 0],
+      [4, 4, 1],
+      [5, 4, 0],
+      [5, 3, 1],
+      [6, 2, 1],
+      [6, 1, 1],
+      [6, 1, 0]
+    ];
+    var widgets = <Widget>[];
+    var curPrize = 1;
+    for (var list in rule) {
+      if (curPrize != list[0]) {
+        widgets.add(Divider(
+          color: Colors.black,
+        ));
+        curPrize = list[0];
+      }
+      widgets.add(SimpleDialogOption(
+          child: RichText(
+        text: TextSpan(
+            text: "Prize ${list[0]}:  ",
+            style: plainTextStyle,
+            children: _buildRuleDialogOptionText(list[1], list[2])),
+      )));
+    }
+    return widgets;
+  }
+
+  List<TextSpan> _buildRuleDialogOptionText(int red, int blue) {
+    var ret = <TextSpan>[];
+    if (red > 0) {
+      ret.add(TextSpan(
+          text: "$red Red ", style: const TextStyle(color: Colors.red)));
+    }
+    if (blue > 0) {
+      if (red > 0) {
+        ret.add(TextSpan(
+            text: "and ", style: const TextStyle(color: Colors.black)));
+      }
+      ret.add(TextSpan(
+          text: "$blue Blue", style: const TextStyle(color: Colors.blue)));
+    }
+    return ret;
   }
 
   List<Widget> _buildAwardColumns() {
