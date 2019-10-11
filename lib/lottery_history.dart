@@ -68,7 +68,7 @@ class _LotteryHistoryState extends State<LotteryHistory> {
       for (var i = 0; i < len; ++i) {
         sb..write(numbers[i])..write("  ");
       }
-      sb.write(numbers[len]);
+      sb..write("-  ")..write(numbers[len]);
       return sb.toString();
     }).toList(growable: false);
     setState(() {

@@ -82,7 +82,7 @@ class LotteryDataManager {
       final int minOrder) async {
     const header = {"Referer": "http://www.cwl.gov.cn/kjxx/ssq/kjgg/"};
     var response = await http.get(
-        "http://www.cwl.gov.cn/cwl_admin/kjxx/findDrawNotice?name=ssq&issueCount=30",
+        "http://www.cwl.gov.cn/cwl_admin/kjxx/findDrawNotice?name=ssq&issueCount=50",
         headers: header);
     var ret = <String>[];
     if (response.statusCode == 200) {
